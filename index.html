@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Tratamento - Tirzepatida (T.G. 15)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-header { background: linear-gradient(135deg, #0d9488 0%, #047857 100%); }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="gradient-header text-white shadow-xl py-6 px-4">
+        <div class="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur border border-white/20 text-2xl">
+                    <i class="fa-solid fa-syringe"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-bold tracking-tight">T.G. 15 - Tirzepatida</h1>
+                    <p class="text-teal-100 text-xs md:text-sm mt-0.5">Painel Avançado de Acompanhamento de Emagrecimento</p>
+                </div>
+            </div>
+
+            <!-- Start Date Clickable/Editable Badge -->
+            <div class="bg-white/10 backdrop-blur px-4 py-2.5 rounded-2xl border border-white/20 flex items-center gap-3 shadow-inner">
+                <i class="fa-solid fa-calendar-star text-teal-200 text-lg"></i>
+                <div>
+                    <span class="block text-[10px] uppercase tracking-wider text-teal-200 font-medium">Início do Tratamento</span>
+                    <div class="flex items-center gap-2">
+                        <span id="header-start-date-display" class="font-bold text-sm">16/10/2026</span>
+                        <button onclick="openDateModal()" class="text-xs bg-white/20 hover:bg-white/30 text-white px-2 py-0.5 rounded-lg transition" title="Alterar Data de Início">
+                            <i class="fa-solid fa-pen text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-4xl mx-auto w-full p-4 md:p-6 flex-grow space-y-6">
+
+        <!-- Toast Notification -->
+        <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-3 text-sm">
+            <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400"></i>
+            <span id="toast-message">Ação realizada com sucesso!</span>
+        </div>
+
+        <!-- Date Edit Modal -->
+        <div id="date-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-days text-teal-600"></i> Alterar Início do Tratamento
+                    </h3>
+                    <button onclick="closeDateModal()" class="text-slate-400 hover:text-slate-600">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+                <p class="text-xs text-slate-500">Ao alterar a data de início, o aplicativo recalculará automaticamente as datas das 4 semanas subsequentes (intervalos de 7 dias).</p>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nova Data de Início (Semana 1)</label>
+                    <input type="date" id="modal-start-date-input" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-teal-500 outline-none bg-slate-50">
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button onclick="closeDateModal()" class="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition">Cancelar</button>
+                    <button onclick="saveNewStartDate()" class="px-5 py-2 text-xs font-medium text-white bg-teal-600 hover:bg-teal-700 rounded-xl transition shadow-sm">Salvar e Recalcular</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 1. Patient Profile Summary Card with Visual Banner -->
+        <section class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+            <!-- Visual Top Banner -->
+            <div class="bg-gradient-to-r from-teal-50 to-emerald-50 p-4 md:p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 bg-teal-600 text-white rounded-2xl flex items-center justify-center shadow-md text-xl">
+                        <i class="fa-solid fa-user-injured"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-base md:text-lg font-bold text-slate-900">Perfil e Biometria Atual</h2>
+                        <p class="text-xs text-slate-500">Acompanhamento do seu índice de massa corporal e evolução.</p>
+                    </div>
+                </div>
+                <button onclick="toggleEditProfile()" id="edit-btn" class="text-xs text-teal-700 hover:text-teal-800 font-semibold flex items-center gap-1.5 bg-white px-3.5 py-2 rounded-xl border border-teal-200 shadow-sm transition">
+                    <i class="fa-solid fa-pen"></i> Editar Biometria
+                </button>
+            </div>
+
+            <!-- View Mode -->
+            <div id="profile-view" class="p-5 md:p-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div class="bg-slate-50/80 p-4 rounded-2xl border border-slate-100 text-center">
+                    <span class="text-xs text-slate-400 font-medium block mb-1">Altura</span>
+                    <span id="view-altura" class="text-xl font-bold text-slate-800">1,72 m</span>
+                </div>
+                <div class="bg-slate-50/80 p-4 rounded-2xl border border-slate-100 text-center">
+                    <span class="text-xs text-slate-400 font-medium block mb-1">Idade</span>
+                    <span id="view-idade" class="text-xl font-bold text-slate-800">46 anos</span>
+                </div>
+                <div class="bg-slate-50/80 p-4 rounded-2xl border border-slate-100 text-center">
+                    <span class="text-xs text-slate-400 font-medium block mb-1">Peso Atual</span>
+                    <span id="view-peso" class="text-xl font-bold text-slate-800">115 kg</span>
+                </div>
+                <div class="bg-amber-50/80 p-4 rounded-2xl border border-amber-200 text-center">
+                    <span class="text-xs text-amber-700 font-semibold block mb-1">IMC (Obesidade II)</span>
+                    <span id="view-imc" class="text-xl font-bold text-amber-800">38,9</span>
+                </div>
+            </div>
+
+            <!-- Edit Mode Form -->
+            <div id="profile-edit" class="hidden p-5 md:p-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Altura (m)</label>
+                    <input type="number" step="0.01" id="input-altura" value="1.72" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-teal-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Idade (anos)</label>
+                    <input type="number" id="input-idade" value="46" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-teal-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Peso Atual (kg)</label>
+                    <input type="number" step="0.1" id="input-peso" value="115" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-teal-500 outline-none">
+                </div>
+                <div class="sm:col-span-3 flex justify-end gap-2 pt-2">
+                    <button onclick="saveProfile()" class="bg-teal-600 hover:bg-teal-700 text-white text-xs px-5 py-2.5 rounded-xl font-semibold transition shadow-sm">
+                        Salvar Alterações
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. Interactive 4-Week Treatment Calendar -->
+        <section class="bg-white rounded-3xl shadow-sm border border-slate-200 p-5 md:p-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 bg-teal-50 text-teal-600 rounded-2xl flex items-center justify-center border border-teal-100 text-xl">
+                        <i class="fa-solid fa-calendar-check"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-base md:text-lg font-bold text-slate-900">Calendário de Aplicações (4 Semanas)</h2>
+                        <p class="text-xs text-slate-500">Controle semanal de dosagem (0,5 mL) e locais de aplicação.</p>
+                    </div>
+                </div>
+                <div class="text-xs bg-slate-100 text-slate-700 px-3.5 py-2 rounded-xl font-semibold flex items-center gap-2">
+                    <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                    <span>Progresso: <span id="progress-count" class="text-teal-600 font-bold">0</span> / 4 Concluídas</span>
+                </div>
+            </div>
+
+            <div id="weeks-container" class="space-y-4">
+                <!-- Dynamically populated weeks -->
+            </div>
+        </section>
+
+        <!-- 3. Rich Visual Guides (Materials & Instructions) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Materials Guide Card -->
+            <section class="bg-white rounded-3xl shadow-sm border border-slate-200 p-5 md:p-6 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 bg-teal-50 text-teal-600 rounded-xl flex items-center justify-center border border-teal-100">
+                            <i class="fa-solid fa-kit-medical"></i>
+                        </div>
+                        <h3 class="text-base font-bold text-slate-900">Materiais do Tratamento</h3>
+                    </div>
+                    <ul class="space-y-3 text-sm text-slate-600">
+                        <li class="flex items-start gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                            <i class="fa-solid fa-syringe text-teal-600 mt-1"></i>
+                            <div>
+                                <strong class="text-slate-800 block text-xs uppercase tracking-wide">Seringa de Insulina</strong>
+                                <span class="text-xs text-slate-500">1 mL (ou 100 UI) para dosagem precisa.</span>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                            <i class="fa-solid fa-prescription-bottle-medical text-teal-600 mt-1"></i>
+                            <div>
+                                <strong class="text-slate-800 block text-xs uppercase tracking-wide">Frasco T.G. 15</strong>
+                                <span class="text-xs text-slate-500">Tirzepatida 15 mg / 0,5 mL (Dose recomendada: 0,5 mL).</span>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                            <i class="fa-solid fa-pump-soap text-teal-600 mt-1"></i>
+                            <div>
+                                <strong class="text-slate-800 block text-xs uppercase tracking-wide">Assepsia e Agulhas</strong>
+                                <span class="text-xs text-slate-500">Álcool 70% e agulha curta (31G x 6mm) para subcutânea.</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Important Instructions Card -->
+            <section class="bg-white rounded-3xl shadow-sm border border-slate-200 p-5 md:p-6 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center border border-amber-100">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <h3 class="text-base font-bold text-slate-900">Cuidados e Armazenamento</h3>
+                    </div>
+                    <ul class="space-y-3 text-sm text-slate-600">
+                        <li class="flex items-start gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                            <i class="fa-solid fa-snowflake text-sky-500 mt-1"></i>
+                            <div>
+                                <strong class="text-slate-800 block text-xs uppercase tracking-wide">Refrigeração Obrigatória</strong>
+                                <span class="text-xs text-slate-500">Manter entre 2°C a 8°C. Não congelar o frasco.</span>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                            <i class="fa-solid fa-rotate text-teal-600 mt-1"></i>
+                            <div>
+                                <strong class="text-slate-800 block text-xs uppercase tracking-wide">Rodízio de Locais</strong>
+                                <span class="text-xs text-slate-500">Alterne entre abdômen e coxas a cada aplicação semanal.</span>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                            <i class="fa-solid fa-ban text-rose-500 mt-1"></i>
+                            <div>
+                                <strong class="text-slate-800 block text-xs uppercase tracking-wide">Uso Único</strong>
+                                <span class="text-xs text-slate-500">Frascos descartáveis. Nunca reutilize agulhas ou sobras.</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-100 text-center">
+                    <button onclick="resetData()" class="text-xs text-rose-600 hover:text-rose-700 font-semibold transition">
+                        <i class="fa-solid fa-rotate-right mr-1"></i> Redefinir Dados do Aplicativo
+                    </button>
+                </div>
+            </section>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500 mt-auto">
+        <p>Painel Terapêutico T.G. 15 • Consulte sempre seu médico para orientações de dosagem e posologia.</p>
+    </footer>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // Default Initial State
+        const defaultState = {
+            startDate: '2026-10-16',
+            profile: {
+                altura: 1.72,
+                idade: 46,
+                peso: 115
+            },
+            weeks: [
+                { id: 1, time: '08:00', site: 'Abdômen (Direito)', dose: '0,5 mL', completed: true, notes: 'Primeira aplicação realizada.' },
+                { id: 2, time: '', site: 'Abdômen (Esquerdo)', dose: '0,5 mL', completed: false, notes: '' },
+                { id: 3, time: '', site: 'Coxa (Direita)', dose: '0,5 mL', completed: false, notes: '' },
+                { id: 4, time: '', site: 'Coxa (Esquerda)', dose: '0,5 mL', completed: false, notes: '' }
+            ]
+        };
+
+        let appData = JSON.parse(localStorage.getItem('tg15_treatment_data_v2')) || defaultState;
+
+        function saveToStorage() {
+            localStorage.setItem('tg15_treatment_data_v2', JSON.stringify(appData));
+        }
+
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            const msgEl = document.getElementById('toast-message');
+            const iconEl = document.getElementById('toast-icon');
+
+            msgEl.textContent = message;
+            iconEl.className = isError ? "fa-solid fa-circle-exclamation text-rose-400" : "fa-solid fa-circle-check text-emerald-400";
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // Format Date string YYYY-MM-DD to DD/MM/YYYY
+        function formatDateBR(dateStr) {
+            if(!dateStr) return '';
+            const parts = dateStr.split('-');
+            if(parts.length !== 3) return dateStr;
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+
+        // Calculate week dates automatically from start date (+7 days each week)
+        function getCalculatedDate(weekIndex) {
+            if (!appData.startDate) return '';
+            const d = new Date(appData.startDate + 'T00:00:00');
+            d.setDate(d.getDate() + (weekIndex * 7));
+            return d.toISOString().split('T')[0];
+        }
+
+        // Update Profile & Header
+        function updateUI() {
+            const p = appData.profile;
+            document.getElementById('view-altura').textContent = p.altura.toFixed(2).replace('.', ',') + ' m';
+            document.getElementById('view-idade').textContent = p.idade + ' anos';
+            document.getElementById('view-peso').textContent = p.peso.toFixed(1).replace('.', ',') + ' kg';
+
+            const imc = p.peso / (p.altura * p.altura);
+            document.getElementById('view-imc').textContent = imc.toFixed(1).replace('.', ',');
+
+            document.getElementById('header-start-date-display').textContent = formatDateBR(appData.startDate);
+            renderWeeks();
+        }
+
+        // Date Modal Controls
+        function openDateModal() {
+            document.getElementById('modal-start-date-input').value = appData.startDate;
+            document.getElementById('date-modal').classList.remove('hidden');
+        }
+
+        function closeDateModal() {
+            document.getElementById('date-modal').classList.add('hidden');
+        }
+
+        function saveNewStartDate() {
+            const newDate = document.getElementById('modal-start-date-input').value;
+            if(!newDate) {
+                showToast('Selecione uma data válida.', true);
+                return;
+            }
+            appData.startDate = newDate;
+            saveToStorage();
+            closeDateModal();
+            updateUI();
+            showToast('Data de início atualizada e semanas recalculadas!');
+        }
+
+        // Profile Toggle & Save
+        function toggleEditProfile() {
+            const viewDiv = document.getElementById('profile-view');
+            const editDiv = document.getElementById('profile-edit');
+            const btn = document.getElementById('edit-btn');
+
+            if(editDiv.classList.contains('hidden')) {
+                editDiv.classList.remove('hidden');
+                viewDiv.classList.add('hidden');
+                btn.innerHTML = '<i class="fa-solid fa-xmark"></i> Cancelar';
+            } else {
+                editDiv.classList.add('hidden');
+                viewDiv.classList.remove('hidden');
+                btn.innerHTML = '<i class="fa-solid fa-pen"></i> Editar Biometria';
+            }
+        }
+
+        function saveProfile() {
+            const altura = parseFloat(document.getElementById('input-altura').value);
+            const idade = parseInt(document.getElementById('input-idade').value);
+            const peso = parseFloat(document.getElementById('input-peso').value);
+
+            if(!altura || !idade || !peso || altura <= 0 || idade <= 0 || peso <= 0) {
+                showToast('Insira valores válidos.', true);
+                return;
+            }
+
+            appData.profile = { altura, idade, peso };
+            saveToStorage();
+            updateUI();
+            toggleEditProfile();
+            showToast('Perfil biométrico atualizado!');
+        }
+
+        // Render Weeks
+        function renderWeeks() {
+            const container = document.getElementById('weeks-container');
+            container.innerHTML = '';
+
+            let completedCount = 0;
+
+            appData.weeks.forEach((week, index) => {
+                if(week.completed) completedCount++;
+                const calculatedDate = getCalculatedDate(index);
+
+                const card = document.createElement('div');
+                card.className = `p-4 md:p-5 rounded-2xl border transition-all ${week.completed ? 'bg-emerald-50/50 border-emerald-200 shadow-sm' : 'bg-slate-50 border-slate-200'}`;
+
+                card.innerHTML = `
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-11 h-11 rounded-2xl flex items-center justify-center font-bold text-sm shadow-sm ${week.completed ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-700'}">
+                                S${week.id}
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-900 text-sm md:text-base">Semana ${week.id}</h4>
+                                <span class="text-xs text-slate-500">Dosagem: <strong class="text-teal-700">${week.dose}</strong></span>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 w-full md:w-auto">
+                            <div class="bg-white p-2.5 rounded-xl border border-slate-200/80 shadow-sm">
+                                <label class="block text-[10px] uppercase font-semibold text-slate-400 mb-0.5">Data Sugerida</label>
+                                <span class="text-xs font-bold text-slate-800">${formatDateBR(calculatedDate)}</span>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] uppercase font-semibold text-slate-400 mb-0.5">Horário</label>
+                                <input type="time" value="${week.time}" onchange="updateWeekField(${index}, 'time', this.value)" class="w-full text-xs px-2.5 py-2 border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-teal-500 outline-none">
+                            </div>
+                            <div class="col-span-2 sm:col-span-1">
+                                <label class="block text-[10px] uppercase font-semibold text-slate-400 mb-0.5">Local</label>
+                                <select onchange="updateWeekField(${index}, 'site', this.value)" class="w-full text-xs px-2.5 py-2 border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-teal-500 outline-none">
+                                    <option value="Abdômen (Direito)" ${week.site === 'Abdômen (Direito)' ? 'selected' : ''}>Abdômen (Dir.)</option>
+                                    <option value="Abdômen (Esquerdo)" ${week.site === 'Abdômen (Esquerdo)' ? 'selected' : ''}>Abdômen (Esq.)</option>
+                                    <option value="Coxa (Direita)" ${week.site === 'Coxa (Direita)' ? 'selected' : ''}>Coxa (Dir.)</option>
+                                    <option value="Coxa (Esquerda)" ${week.site === 'Coxa (Esquerda)' ? 'selected' : ''}>Coxa (Esq.)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between w-full md:w-auto gap-3 pt-2 md:pt-0 border-t md:border-t-0 border-slate-200">
+                            <label class="flex items-center gap-2.5 cursor-pointer select-none bg-white px-3 py-2 rounded-xl border border-slate-200 shadow-sm">
+                                <input type="checkbox" ${week.completed ? 'checked' : ''} onchange="toggleComplete(${index})" class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500">
+                                <span class="text-xs font-bold ${week.completed ? 'text-emerald-700' : 'text-slate-600'}">Concluída</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-slate-200/60">
+                        <input type="text" placeholder="Observações (ex: saciedade mantida, sem efeitos colaterais...)" value="${week.notes}" onchange="updateWeekField(${index}, 'notes', this.value)" class="w-full text-xs px-3 py-2 border border-slate-200/80 rounded-xl bg-white/70 text-slate-600 focus:bg-white transition outline-none">
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            document.getElementById('progress-count').textContent = completedCount;
+        }
+
+        function updateWeekField(index, field, value) {
+            appData.weeks[index][field] = value;
+            saveToStorage();
+            showToast('Alterações salvas.');
+        }
+
+        function toggleComplete(index) {
+            appData.weeks[index].completed = !appData.weeks[index].completed;
+            saveToStorage();
+            renderWeeks();
+            showToast(appData.weeks[index].completed ? 'Aplicação marcada como concluída!' : 'Status alterado.');
+        }
+
+        function resetData() {
+            if(confirm('Deseja realmente redefinir todos os dados do aplicativo?')) {
+                localStorage.removeItem('tg15_treatment_data_v2');
+                appData = JSON.parse(JSON.stringify(defaultState));
+                updateUI();
+                showToast('Aplicativo redefinido com sucesso.');
+            }
+        }
+
+        window.onload = function() {
+            updateUI();
+        };
+    </script>
+</body>
+</html>
+```
